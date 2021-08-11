@@ -27,7 +27,7 @@ class PysweeperApp:
         self.frame1 = tk.Frame(self.toplevel2, container='false')
         self.labelframe3 = tk.LabelFrame(self.frame1)
         self.text1 = ScrolledText(self.labelframe3)
-        _text_ = '''pysweeper, build 11/8/21\nPlease select a COM port and press [Start Service]'''
+        _text_ = '''pysweeper, upload date: 11/8/21\nPlease select a COM port and press [Start Service]'''
         self.text1.insert('0.0', _text_)    
         self.text1.configure(height='10', width='50', state = 'disabled')
         self.text1.pack(expand='true', fill='y', side='top')
@@ -377,14 +377,20 @@ def MatrixSwap(key):
 def loadkeys():
     keysfile = open("keys.json")
     keys = json.load(keysfile)
+    global kv
     kv = keys['keyversion']
+    global keystore
+    global challenge1_secret
+    global challenge2_secret
     keystore = keys['keystore']
     challenge1_secret = keys['challenge1_secret']
     challenge2_secret = keys['challenge2_secret']
     keysfile.close()
 
     msg("Key version: " + str(kv))
-
+    
+def updatekeys():
+    loadkeys()
     url = 'https://raw.githubusercontent.com/khubik2/pysweeper/master/keys.json'
     try:
         r = requests.get(url, allow_redirects=True)
@@ -392,12 +398,12 @@ def loadkeys():
         downfile = open("temp.json")
         ckeys = json.load(downfile)
         downfile.close()
-        if ckeys['keyversion'] > keys['keyversion']:
+        if ckeys['keyversion'] > kv:
 
             os.remove("keys.json")
             os.rename('temp.json', 'keys.json') 
             msg("Keys have been updated.")
-
+            loadkeys()
         else: 
             msg("No key updates available.")
             os.remove('temp.json')
@@ -410,7 +416,7 @@ def loadkeys():
 
 if __name__ == '__main__':
     app = PysweeperApp()
-    loadkeys()
+    updatekeys()
     app.run()
 
 
