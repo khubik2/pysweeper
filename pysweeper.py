@@ -27,7 +27,7 @@ class PysweeperApp:
         self.frame1 = tk.Frame(self.toplevel2, container='false')
         self.labelframe3 = tk.LabelFrame(self.frame1)
         self.text1 = ScrolledText(self.labelframe3)
-        _text_ = '''pysweeper, indev version\nPlease select a COM port and press [Start Service]'''
+        _text_ = '''pysweeper, build 11/8/21\nPlease select a COM port and press [Start Service]'''
         self.text1.insert('0.0', _text_)    
         self.text1.configure(height='10', width='50', state = 'disabled')
         self.text1.pack(expand='true', fill='y', side='top')
