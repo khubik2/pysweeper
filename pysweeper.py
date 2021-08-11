@@ -14,6 +14,8 @@ import serial
 import serial.tools.list_ports
 import threading
 import time
+import requests
+import os
 import json
 
 class PysweeperApp:
@@ -99,12 +101,7 @@ class PysweeperApp:
     def run(self):
         self.mainwindow.mainloop()
 
-keysfile = open("keys.json")
-keys = json.load(keysfile)
-keystore = keys['keystore']
-challenge1_secret = keys['challenge1_secret']
-challenge2_secret = keys['challenge2_secret']
-keysfile.close()
+
 
 ser = serial.Serial()
 running = False;
@@ -377,8 +374,43 @@ def MatrixSwap(key):
         temp[i] = key[newmap[i]]
     return temp[0:len(key)]
 
+def loadkeys():
+    keysfile = open("keys.json")
+    keys = json.load(keysfile)
+    kv = keys['keyversion']
+    keystore = keys['keystore']
+    challenge1_secret = keys['challenge1_secret']
+    challenge2_secret = keys['challenge2_secret']
+    keysfile.close()
+
+    msg("Key version: " + str(kv))
+
+    url = 'https://raw.githubusercontent.com/khubik2/pysweeper/master/keys.json'
+    try:
+        r = requests.get(url, allow_redirects=True)
+        open('temp.json', 'wb').write(r.content)
+        downfile = open("temp.json")
+        ckeys = json.load(downfile)
+        downfile.close()
+        if ckeys['keyversion'] > keys['keyversion']:
+
+            os.remove("keys.json")
+            os.rename('temp.json', 'keys.json') 
+            msg("Keys have been updated.")
+
+        else: 
+            msg("No key updates available.")
+            os.remove('temp.json')
+
+    except Exception:
+        msg("Can't update keys - no connection to Internet.")
+        return
+
+    if os.path.exists('temp.json'): os.remove('temp.json')
+
 if __name__ == '__main__':
     app = PysweeperApp()
+    loadkeys()
     app.run()
 
 
