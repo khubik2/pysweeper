@@ -5,7 +5,7 @@ To restore your PSP, follow a simple instruction:
 1. Get neccessary hardware to make a probe: 
     - a USB to TTL converter;
     - a 1n4148 diode; 
-    - a 10kOhm diode; 
+    - a 10kOhm resistor; 
     - a sacrificial battery you can rip the female connector from (or a way to substitute it)
     - of course, soldering equipment. 
 2. Build your probe - one-wire UART (aka K-line) adapter. You can omit an external battery if you power your PSP with a DC charger. Be aware that adapter's power output alone is not sufficient to power the PSP.![Yoti's_schematic](https://user-images.githubusercontent.com/82090925/129186282-6d036e88-fab3-4fac-9b2a-7ac2bf7f9628.png) 
