@@ -19,93 +19,99 @@ import os
 import json
 
 class PysweeperApp:
-    
     def __init__(self, master=None):
         # build ui
-        # build ui
-        self.toplevel2 = tk.Tk() if master is None else tk.Toplevel(master)
-        self.frame1 = tk.Frame(self.toplevel2, container='false')
-        self.labelframe3 = tk.LabelFrame(self.frame1)
-        self.text1 = ScrolledText(self.labelframe3)
-        _text_ = '''pysweeper, upload date: 11/8/21\nPlease select a COM port and press [Start Service]'''
-        self.text1.insert('0.0', _text_)    
-        self.text1.configure(height='10', width='50', state = 'disabled')
-        self.text1.pack(expand='true', fill='y', side='top')
-        self.button5 = tk.Button(self.labelframe3)
-        self.button5.configure(text='Clear Monitor', command = clearmon)
-        self.button5.pack(anchor='e', expand='true', side='right')
-        self.checkbutton1 = tk.Checkbutton(self.labelframe3)
-        self.checkbutton1.configure(anchor='ne', cursor='arrow', font='TkTextFont', relief='flat')
-        self.checkbutton1.configure(text='Response Debug')
-        self.checkbutton1.pack(anchor='w', expand='false', side='left')
-        self.checkbutton1.pack_propagate(0)
-        self.checkbutton2 = tk.Checkbutton(self.labelframe3)
-        self.keyWarn = tk.BooleanVar(value=False)
-        self.checkbutton2.configure(offvalue=False, onvalue=True, text='Missing Keys Alert', variable=self.keyWarn)
-        self.checkbutton2.pack(anchor='n', side='left')
-        self.checkbutton2.pack_propagate(0)
-        self.labelframe3.configure(height='200', takefocus=False, text='Protocol Monitor', width='200')
-        self.labelframe3.pack(expand='true', fill='both', side='right')
-        self.labelframe1 = tk.LabelFrame(self.frame1)
-        self.radiobutton1 = tk.Radiobutton(self.labelframe1)
-        self.rb = tk.IntVar(value=9)
-        self.radiobutton1.configure(cursor='arrow', justify='left', overrelief='flat', state='normal')
-        self.radiobutton1.configure(text='Service Mode', value='0', variable=self.rb)
-        self.radiobutton1.pack(anchor='w', side='top')
-        self.radiobutton2 = tk.Radiobutton(self.labelframe1)
-        self.radiobutton2.configure(text='Autoboot', value='1', variable=self.rb)
-        self.radiobutton2.pack(anchor='w', side='top')
-        self.radiobutton3 = tk.Radiobutton(self.labelframe1)
-        self.radiobutton3.configure(compound='top', text='Normal Boot', value='2', variable=self.rb)
-        self.radiobutton3.pack(anchor='w', side='top')
-        self.radiobutton4 = tk.Radiobutton(self.labelframe1)
-        self.radiobutton4.configure(text='Custom S/N', value='3', variable=self.rb)
-        self.radiobutton4.pack(anchor='w', side='top')
-        self.entry1 = tk.Entry(self.labelframe1)
+        self.toplevel4 = tk.Tk() if master is None else tk.Toplevel(master)
+        self.frame10 = ttk.Frame(self.toplevel4)
+        self.labelframe1 = ttk.Labelframe(self.frame10)
+        self.radiobutton9 = ttk.Radiobutton(self.labelframe1)
+        self.rb = tk.IntVar(value=0)
+        self.radiobutton9.configure(text='Service Mode', value='0', variable=self.rb)
+        self.radiobutton9.pack(anchor='w', side='top')
+        self.radiobutton10 = ttk.Radiobutton(self.labelframe1)
+        self.radiobutton10.configure(text='Autoboot', value='1', variable=self.rb)
+        self.radiobutton10.pack(anchor='w', side='top')
+        self.radiobutton11 = ttk.Radiobutton(self.labelframe1)
+        self.radiobutton11.configure(text='Normal Boot', value='2', variable=self.rb)
+        self.radiobutton11.pack(anchor='w', side='top')
+        self.radiobutton12 = ttk.Radiobutton(self.labelframe1)
+        self.radiobutton12.configure(text='Custom S/N', value='3', variable=self.rb)
+        self.radiobutton12.pack(anchor='w', side='top')
+        self.entry1 = ttk.Entry(self.labelframe1)
+        self.entry1.configure(width='8')
         self.entry1.pack(side='top')
         self.labelframe1.configure(height='200', text='Emulator Mode', width='200')
-        self.labelframe1.pack(fill='x', side='top')
-        self.labelframe2 = tk.LabelFrame(self.frame1)
-        self.label1 = ttk.Label(self.labelframe2)
-        self.label1.configure(anchor='w', text='Port:')
-        self.label1.pack(anchor='n', expand='false', side='top')
-        self.combobox2 = ttk.Combobox(self.labelframe2)
+        self.labelframe1.pack(anchor='n', fill='both', side='top')
+        self.frame1 = tk.Frame(self.frame10)
+        self.frame2 = tk.Frame(self.frame1)
+        self.label1 = tk.Label(self.frame2)
+        self.label1.configure(compound='top', text='Port:')
+        self.label1.pack(pady='4', side='left')
+        self.combobox2 = ttk.Combobox(self.frame2)
         self.cbsel = tk.StringVar(value='')
-        self.combobox2.configure(state='normal', textvariable=self.cbsel, width='7', postcommand = updatecom)
-        self.combobox2.bind("<<ComboboxSelected>>", updatecom)
-        self.combobox2.pack(anchor='n', expand='false', fill='x', side='top')
-        self.button1 = tk.Button(self.labelframe2)
-        self.button1.configure(cursor='arrow', default='normal', text='Start Service', command = startsv)
-        self.button1.pack(anchor='s', expand='false', fill='x', side='top')
-        self.button2 = tk.Button(self.labelframe2)
-        self.button2.configure(text='Stop Service', command = stopsv)
+        self.combobox2.configure(textvariable=self.cbsel, width='7')
+        self.combobox2.pack(side='right')
+        self.combobox2.configure(postcommand=updatecom)
+        self.frame2.configure(height='200', width='200')
+        self.frame2.pack(side='top')
+        self.button1 = ttk.Button(self.frame1)
+        self.button1.configure(text='Start Service')
+        self.button1.pack(fill='x', side='top')
+        self.button1.configure(command=startsv)
+        self.button2 = ttk.Button(self.frame1)
+        self.button2.configure(text='Stop Service')
         self.button2.pack(fill='x', side='top')
-        self.button3 = tk.Button(self.labelframe2)
-        self.button3.configure(text='Guide', command = guide)
-        self.button3.pack(anchor='n', expand='false', fill='x', side='top')
-        self.button4 = tk.Button(self.labelframe2)
-        self.button4.configure(text='About', command = about)
+        self.button2.configure(command=stopsv)
+        self.button3 = ttk.Button(self.frame1)
+        self.button3.configure(text='Guide')
+        self.button3.pack(fill='x', side='top')
+        self.button3.configure(command=guide)
+        self.button4 = ttk.Button(self.frame1)
+        self.button4.configure(text='About')
         self.button4.pack(fill='x', side='top')
-        self.labelframe2.configure(height='200', width='200')
-        self.labelframe2.pack(fill='x', side='top')
-        self.frame1.configure(height='320', width='384')
-        self.frame1.pack(side='top')
-        self.toplevel2.configure(cursor='arrow', height='320', width='384')
-        self.toplevel2.overrideredirect('False')
-        self.toplevel2.resizable(False, False)
-        self.toplevel2.title('pysweeper')
+        self.button4.configure(command=about)
+        self.frame1.configure(height='200', width='200')
+        self.frame1.pack(fill='both', side='top')
+        self.frame10.configure(height='200', width='200')
+        self.frame10.pack(side='left')
+        self.frame12 = ttk.Frame(self.toplevel4)
+        self.labelframe2 = ttk.Labelframe(self.frame12)
+        self.text1 = ScrolledText(self.labelframe2)
+        _text_ = '''pysweeper, upload date: 16/8/21\nPlease select a COM port and press [Start Service].\n'''
+        self.text1.insert('0.0', _text_)  
+        self.text1.configure(blockcursor='false', height='10', insertunfocussed='hollow', relief='flat')
+       	self.text1.configure(state='disabled', width='52')
+        self.text1.pack(expand='true', fill='both', side='top')
+        self.checkbutton1 = ttk.Checkbutton(self.labelframe2)
+        self.rdbg = tk.BooleanVar(value='False')
+        self.checkbutton1.configure(offvalue='False', onvalue='True', text='Response Debug', variable=self.rdbg)
+        self.checkbutton1.pack(side='left')
+        self.checkbutton2 = ttk.Checkbutton(self.labelframe2)
+        self.keyWarn = tk.BooleanVar(value='True')
+        self.checkbutton2.configure(offvalue='False', onvalue='True', text='Missing Keys Alert', variable=self.keyWarn)
+        self.checkbutton2.pack(padx='8', side='left')
+        self.button5 = ttk.Button(self.labelframe2)
+        self.button5.configure(text='Clear Monitor')
+        self.button5.pack(anchor='e', expand='true', padx='0', side='right')
+        self.button5.configure(command=clearmon)
+        self.labelframe2.configure(height='200', text='Protocol Monitor', width='200')
+        self.labelframe2.pack(expand='true', fill='both', side='top')
+        self.frame12.configure(height='200', width='200')
+        self.frame12.pack(ipady='27', side='top')
+        self.toplevel4.configure(borderwidth='2', height='200', width='200')
 
         # Main widget
-        self.mainwindow = self.toplevel2
+        self.mainwindow = self.toplevel4
+ 
 
     def run(self):
         self.mainwindow.mainloop()
 
 
-
 ser = serial.Serial()
 running = False;
-
+storedsl = ''
+       
 def msg(ms): 
     app.text1['state'] = 'normal'
     app.text1.insert(END, ms+'\n')
@@ -146,6 +152,11 @@ def about():
     app.text1.see(1.0)
 
 def startsv():
+    global running
+    global storedsl
+    if running == True: return
+
+        
     serialn = bytearray(4)
     op = app.rb.get()
     portsel = app.cbsel.get()
@@ -174,8 +185,14 @@ def startsv():
             return
 
         serialn[0::2], serialn[1::2] = serialn[1::2], serialn[0::2]
-        global running
         running = True
+        # spastic code
+        if os.path.exists('/dev/serial/by-id'):
+            for sl in os.listdir('/dev/serial/by-id'):
+                if os.path.basename(os.readlink('/dev/serial/by-id/' + sl)) == os.path.basename(portsel):
+                    storedsl = '/dev/serial/by-id/' + sl
+                    # msg(storedsl)
+        else: storedsl = ''
         t = threading.Thread(target=emuloop, args=(portsel, serialn))
         t.start()
 
@@ -197,7 +214,7 @@ def openport(pname):
         ser.reset_output_buffer()
         return 0
     except serial.SerialException:
-        msg("Port " + pname + " is busy or not present.")
+        msg("Port " + pname + " is busy, not present or you don't have permissions to use it.")
         return 1
     except Exception as e:
         msg("An exception occurred during port opening: " + repr(e))
@@ -307,6 +324,20 @@ def emuloop(pname, sn):
         else:
             msg("Service stopped, COM port closed.")
             return
+    
+    except OSError:
+        if running:
+            msg("Port disconnected. Retrying in 2 seconds.")
+            time.sleep(2)
+            updatecom()
+            newname = '/dev/' + os.path.basename(os.readlink(storedsl))
+            if newname in app.combobox2['values']:
+                emuloop(newname, sn)
+            else:
+                msg("Port didn't come back online. ")
+                msg("Service stopped, COM port closed.")
+                ser.close() 
+                return
 
     except Exception as e:
         msg("An exception occurred in IO loop: " + repr(e))
