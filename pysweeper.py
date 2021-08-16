@@ -49,7 +49,7 @@ class PysweeperApp:
         self.label1.pack(pady='4', side='left')
         self.combobox2 = ttk.Combobox(self.frame2)
         self.cbsel = tk.StringVar(value='')
-        self.combobox2.configure(textvariable=self.cbsel, width='7')
+        self.combobox2.configure(state='readonly', textvariable=self.cbsel, width='12')
         self.combobox2.pack(side='right')
         self.combobox2.configure(postcommand=updatecom)
         self.frame2.configure(height='200', width='200')
@@ -202,9 +202,13 @@ def stopsv():
     ser.close()
 
 def updatecom():
+    app.combobox2['state'] = 'normal'
     app.combobox2['values'] = ''
+    portlist = list()
     for port in serial.tools.list_ports.comports():
-        app.combobox2['values'] += port.device
+        portlist.append(port.device)
+    app.combobox2['values'] = portlist
+    app.combobox2['state'] = 'readonly'
 
 def openport(pname):
     try:
