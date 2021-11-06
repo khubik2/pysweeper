@@ -3,6 +3,7 @@
 ## How-to
 You can watch the video or follow a text instruction below.
 [![Video Thumbnail](http://img.youtube.com/vi/ZiyRU0H7CU8/0.jpg)](http://www.youtube.com/watch?v=ZiyRU0H7CU8 "PSP-3000 Unbrick Guide")
+
 To restore your PSP, follow a simple instruction: 
 1. Get neccessary hardware to make a probe: 
     - a USB to TTL converter;
