@@ -24,7 +24,7 @@ To restore your PSP, follow a simple instruction:
 | PSP-2000                           | Any besides 8C                             | Supported, any magic MS                |
 | PSP-2000                           | 8C                                         | Supported, only JigKick clone or DDCv9 |
 | PSP-3000                           | 8C 8D 9A 9B and some 9C                    | Supported, only JigKick clone or DDCv9 |
-| PSP-3000                           | some 9C; 9D, any code starting with 0 or 1 | Not supported                          |
+| PSP-3000                           | some 9C; 9D, any code starting with 0 or 1 | Supported, only JigKick clone          |
 | PSPgo  (N1000)                     | Any                                        | Not supported                          |
 | PSP Steet (E1000)                  | Any                                        | Not supported                          |
 
@@ -46,3 +46,6 @@ To restore your PSP, follow a simple instruction:
 - dee008 - Portable PSP battery controller emulator, PSP Street K-line pin location
 - Wr0zen - PSPgo boards donation
 - VrOdin - PSPgo tracing
+- Peter Lustig - Syscon chips donation
+- davee - glitching TA-095 Syscon
+- lusid1 - 09g testing
