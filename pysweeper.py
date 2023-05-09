@@ -14,9 +14,61 @@ import serial
 import serial.tools.list_ports
 import threading
 import time
-import requests
 import os
-import json
+
+keystore = {\
+    0x00: "5C52D91CF382ACA489D88178EC16297B",\
+    0x01: "9D4F50FCE1B68E1209307DDBA6A5B5AA",\
+    0x02: "0975988864ACF7621BC0909DF0FCABFF",\
+    0x03: "C9115CE2064A2686D8D6D9D08CDE3059",\
+    0x04: "667539D2FB4273B2903FD7A39ED2C60C",\
+    0x05: "F4FAEF20F4DBAB31D18674FD8F990566",\
+    0x06: "EA0C811363D7E930F961135A4F352DDC",\
+    0x08: "0A2E73305C382D4F310D0AED84A41800",\
+    0x09: "D20474308FE269046ED7BB07CF1CFF43",\
+    0x0A: "AC00C0E3E80AF0683FDD1745194543BD",\
+    0x0B: "0177D750BDFD2BC1A0493A134A4C6ACF",\
+    0x0C: "05349170939345EE951A14843334A0DE",\
+    0x0D: "DFF3FCD608B05597CF09A23BD17D3FD2",\
+    0x2F: "4AA7C7B01134466FAC82163E4BB51BF9",\
+    0x97: "cac8b87acd9ec49690abe0813920b110",\
+    0xB3: "03BEB65499140483BA187A64EF90261D",\
+    0xD9: "C7AC1306DEFE39EC83A1483B0EE2EC89",\
+    0xEB: "418499BE9D35A3B9FC6AD0D6F041BB26"}
+                    
+challenge1_secret = {\
+    0x00: "D2072253A4F27468",\
+    0x01: "B37A16EF557BD089",\
+    0x02: "A04E32BBA7139E46",\
+    0x03: "B0B809833989FAE2",\
+    0x04: "FE7D7899BFEC47C5",\
+    0x05: "306F3A03D86CBEE4",\
+    0x06: "8422DFEAE21B63C2",\
+    0x08: "AD4043B256EB458B",\
+    0x0A: "C2377E8A74096C5F",\
+    0x0D: "581C7F1944F96262",\
+    0x2F: "F1BC562BD55BB077",\
+    0x97: "af6010a846f741f3",\
+    0xB3: "DBD3AEA4DB046410",\
+    0xD9: "90E1F0C00178E3FF",\
+    0xEB: "0BD9027E851FA123"}
+
+challenge2_secret = {\
+    0x00: "F5D7D4B575F08E4E",\
+    0x01: "CC699581FD89126C",\
+    0x02: "495E034794931D7B",\
+    0x03: "F4E04313AD2EB4DB",\
+    0x04: "865E3EEF9DFBB1FD",\
+    0x05: "FF72BD2B83B89D2F",\
+    0x06: "58B95AAEF399DBD0",\
+    0x08: "67C07215D96B39A1",\
+    0x0A: "093EC519AF0F502D",\
+    0x0D: "318053875C203E24",\
+    0x2F: "1BDF2433EB29155B",\
+    0x97: "9deec01144b66f41",\
+    0xB3: "E32B8F56B2641298",\
+    0xD9: "C34A6A7B205FE8F9",\
+    0xEB: "F791ED0B3F49A448"}
 
 class PysweeperApp:
     def __init__(self, master=None):
@@ -80,7 +132,7 @@ class PysweeperApp:
         _text_ = '''pysweeper, upload date: 16/8/21\nPlease select a COM port and press [Start Service].\n'''
         self.text1.insert('0.0', _text_)  
         self.text1.configure(blockcursor='false', height='10', insertunfocussed='hollow', relief='flat')
-       	self.text1.configure(state='disabled', width='52')
+        self.text1.configure(state='disabled', width='52')
         self.text1.pack(expand='true', fill='both', side='top')
         self.checkbutton1 = ttk.Checkbutton(self.labelframe2)
         self.rdbg = tk.BooleanVar(value='False')
@@ -106,7 +158,6 @@ class PysweeperApp:
 
     def run(self):
         self.mainwindow.mainloop()
-
 
 ser = serial.Serial()
 running = False;
@@ -151,6 +202,19 @@ def about():
     msg("[!] Please do note that this tool is free and open-source. If you paid for it, demand a refund in full.\n")
     app.text1.see(1.0)
 
+def test_serial_port(portsel):
+    ser = serial.Serial(port=portsel, baudrate=19200, bytesize=8, parity=serial.PARITY_EVEN, timeout=1, stopbits=serial.STOPBITS_TWO)
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
+    teststr = "The quick brown fox jumps over the lazy dog. 1234567890\n".encode('utf-8')
+    ser.write(teststr)
+    cmpstr = ser.read_until()
+    ser.close()
+    if teststr != cmpstr:
+        return False
+    else:
+        return True
+
 def startsv():
     global running
     global storedsl
@@ -193,6 +257,13 @@ def startsv():
                     storedsl = '/dev/serial/by-id/' + sl
                     # msg(storedsl)
         else: storedsl = ''
+
+        # Spastic code 2: test if port is valid, close it, run emulation loop
+        if not test_serial_port(portsel):
+            msg("No port echo detected. Double check your assembly.")
+            stopsv()
+            return
+        
         t = threading.Thread(target=emuloop, args=(portsel, serialn))
         t.start()
 
@@ -258,17 +329,17 @@ def emuloop(pname, sn):
     try:
         while ser.is_open and running:
             time.sleep(0.001)
-            if ser.in_waiting >= 4:
+            if ser.in_waiting >= 4: # a packet is no less than 4 bytes long
                 packet = readpacket("5a")
                 if packet[5] == True:
                     if packet[0].hex() == "5a":
                         if packet[2].hex() == "01":
-                            ser.write(bytes.fromhex("a5050610c30676"))
+                            ser.write(bytes.fromhex("a5050610c30676"))  # battery capacity 
                         elif packet[2].hex() == "0c":
-                            writewithchecksum("a50606", sn)
+                            writewithchecksum("a50606", sn) # battery sn 
                         elif packet[2].hex() == "80":
                             screq = packet[3]
-                            version = str(screq[0])
+                            version = screq[0]
                             if version not in keystore:
                                 response1 = bytes.fromhex("ffffffffffffffff")
                                 if app.keyWarn.get():
@@ -281,16 +352,16 @@ def emuloop(pname, sn):
                             else:
                                 req = screq[1:]
                                 data=MixChallenge1(version,req)
-                                challenge1a=AES.new(bytes(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data)))
+                                challenge1a=AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data)))
                                 second = bytearray(0x10)
                                 second[:] = challenge1a[:]
-                                challenge1b=MatrixSwap(AES.new(bytes(keystore[version]), AES.MODE_ECB).encrypt(bytes((second))))
+                                challenge1b=MatrixSwap(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes((second))))
                                 response1 = bytes(challenge1a[0:8]) + bytes(challenge1b[0:8])
                             writewithchecksum("a51206", response1)
                         elif packet[2].hex() == "81":
                             data2=MixChallenge2(version,challenge1b[0:8])
-                            challenge2=AES.new(bytes(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data2)))
-                            response2=(AES.new(bytes(keystore[version]), AES.MODE_ECB).encrypt(challenge2))
+                            challenge2=AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data2)))
+                            response2=(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(challenge2))
                             writewithchecksum("a51206", response2)
                         elif packet[2].hex() == "03":
                             ser.write(bytes.fromhex("a5040636100a"))
@@ -312,7 +383,7 @@ def emuloop(pname, sn):
                             ser.write(bytes.fromhex("a50406e2046a"))
              
                     readpacket("a5")
-
+        
     except serial.SerialException:
         if running:
             msg("Port disconnected. Retrying in 1 second.")
@@ -342,6 +413,9 @@ def emuloop(pname, sn):
                 msg("Service stopped, COM port closed.")
                 ser.close() 
                 return
+        else:
+            msg("Service stopped, COM port closed.")
+            return
 
     except Exception as e:
         msg("An exception occurred in IO loop: " + repr(e))
@@ -358,7 +432,7 @@ def checksum(packet):
 #PSP v4 Syscon Handshake Calculator by Proxima (R)
 def MixChallenge1(version, challenge):
     data = [ 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
-    secret1=challenge1_secret[version]
+    secret1=bytes.fromhex(challenge1_secret[version])
     data[0] =secret1[0]
     data[4] =secret1[1]
     data[8] =secret1[2]
@@ -380,7 +454,7 @@ def MixChallenge1(version, challenge):
 
 def MixChallenge2(version, challenge):
     data = [ 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
-    secret2=challenge2_secret[version]
+    secret2=bytes.fromhex(challenge2_secret[version])
     data[0] =challenge[0]
     data[4] =challenge[1]
     data[8] =challenge[2]
@@ -409,49 +483,9 @@ def MatrixSwap(key):
         temp[i] = key[newmap[i]]
     return temp[0:len(key)]
 
-def loadkeys():
-    keysfile = open("keys.json")
-    keys = json.load(keysfile)
-    global kv
-    kv = keys['keyversion']
-    global keystore
-    global challenge1_secret
-    global challenge2_secret
-    keystore = keys['keystore']
-    challenge1_secret = keys['challenge1_secret']
-    challenge2_secret = keys['challenge2_secret']
-    keysfile.close()
-
-    msg("Key version: " + str(kv))
     
-def updatekeys():
-    loadkeys()
-    url = 'https://raw.githubusercontent.com/khubik2/pysweeper/master/keys.json'
-    try:
-        r = requests.get(url, allow_redirects=True)
-        open('temp.json', 'wb').write(r.content)
-        downfile = open("temp.json")
-        ckeys = json.load(downfile)
-        downfile.close()
-        if ckeys['keyversion'] > kv:
-
-            os.remove("keys.json")
-            os.rename('temp.json', 'keys.json') 
-            msg("Keys have been updated.")
-            loadkeys()
-        else: 
-            msg("No key updates available.")
-            os.remove('temp.json')
-
-    except Exception:
-        msg("Can't update keys - no connection to Internet.")
-        return
-
-    if os.path.exists('temp.json'): os.remove('temp.json')
-
 if __name__ == '__main__':
     app = PysweeperApp()
-    updatekeys()
     app.run()
 
 
