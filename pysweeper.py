@@ -70,6 +70,10 @@ challenge2_secret = {\
     0xD9: "C34A6A7B205FE8F9",\
     0xEB: "F791ED0B3F49A448"}
 
+go_key1 = bytes.fromhex("C66E9ED6ECBCB121B7465D25037D6646")
+go_key2 = bytes.fromhex("da24dab43a61cbdf61fd255d0aea7957")
+go_secret = bytes.fromhex("880e2a94110926b20e53e22ae648ae9d")
+
 class PysweeperApp:
     def __init__(self, master=None):
         # build ui
@@ -312,9 +316,8 @@ def readpacket(key):
         else:
             csum = ser.read(1)
             msg(hello.hex().upper() + ' ' + len.hex().upper() + ' ' + opcode.hex().upper() + ' ' + csum.hex().upper())
-        if key == "5a": return (hello, len, opcode, mesg, csum, True)
-        else: return (0, 0, 0, 0, 0, False)
-    else: return (0, 0, 0, 0, 0, False)
+        return (hello, len, opcode, mesg, csum)
+
 
 def writewithchecksum(header, mesg):
     ser.write(bytes.fromhex(header))
@@ -331,7 +334,7 @@ def emuloop(pname, sn):
             time.sleep(0.001)
             if ser.in_waiting >= 4: # a packet is no less than 4 bytes long
                 packet = readpacket("5a")
-                if packet[5] == True:
+                if packet:
                     if packet[0].hex() == "5a":
                         if packet[2].hex() == "01":
                             ser.write(bytes.fromhex("a5050610c30676"))  # battery capacity 
@@ -356,6 +359,7 @@ def emuloop(pname, sn):
                                 second = bytearray(0x10)
                                 second[:] = challenge1a[:]
                                 challenge1b=MatrixSwap(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes((second))))
+                                #challenge1b = bytearray.fromhex('AAAAAAAAAAAAAAAA')
                                 response1 = bytes(challenge1a[0:8]) + bytes(challenge1b[0:8])
                             writewithchecksum("a51206", response1)
                         elif packet[2].hex() == "81":
@@ -363,6 +367,20 @@ def emuloop(pname, sn):
                             challenge2=AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data2)))
                             response2=(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(challenge2))
                             writewithchecksum("a51206", response2)
+                            if version in (0xEB, 0xB3):
+                                ser.write(bytes.fromhex("5a0201a2"))
+                        elif packet[2].hex() == "90":
+                            screq=packet[3]
+                            payload=AES.new(go_key1, AES.MODE_CBC, bytearray(0x10)).decrypt(screq[0x8:0x28])
+                            msg('Decrypted result: ' + payload.hex().upper())
+                            payload91 = payload[8:0x10] + payload[0:8] + bytearray(0x10)
+                            if payload[0x10:0x20] == go_secret:
+                                msg("Go Handshake Request is valid")
+                            else:
+                                msg("Invalid request from Syscon")
+                                return
+                            resp2 = AES.new(go_key2, AES.MODE_CBC, bytearray(0x10)).decrypt(payload91)
+                            writewithchecksum("a52A062001000082828282", resp2)
                         elif packet[2].hex() == "03":
                             ser.write(bytes.fromhex("a5040636100a"))
                         elif packet[2].hex() == "07":
