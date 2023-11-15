@@ -438,9 +438,7 @@ def emuloop(pname, sn):
         return
 
 def checksum(packet):
-    bp = bytearray.fromhex(packet)
-    Sum = sum(bp)
-    sh = hex(Sum)
+    sh = hex(sum(bytearray.fromhex(packet)))
     temp = bytes.fromhex(sh[len(sh)-2:len(sh)])
     return (255 - int.from_bytes(temp, byteorder='little', signed=False)).to_bytes(1, byteorder="little", signed=False)
 
