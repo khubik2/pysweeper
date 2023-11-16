@@ -133,7 +133,7 @@ class PysweeperApp:
         self.frame12 = ttk.Frame(self.toplevel4)
         self.labelframe2 = ttk.Labelframe(self.frame12)
         self.text1 = ScrolledText(self.labelframe2)
-        _text_ = '''pysweeper, PSPgo support\nPlease select a COM port and press [Start Service].\n'''
+        _text_ = '''pysweeper, PSP Go support\nPlease select a COM port and press [Start Service].\n'''
         self.text1.insert('0.0', _text_)
         self.text1.configure(blockcursor='false', height='10', insertunfocussed='hollow', relief='flat')
         self.text1.configure(state='disabled', width='52')
