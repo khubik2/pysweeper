@@ -5,8 +5,8 @@
 
 # If you're on Linux, you need to run this script as a user with serial port access permission.
 
-from tkinter import BOTH, END, LEFT 
-from Crypto.Cipher import AES 
+from tkinter import BOTH, END, LEFT
+from Crypto.Cipher import AES
 from tkinter.scrolledtext import ScrolledText
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -31,11 +31,11 @@ keystore = {\
     0x0C: "05349170939345EE951A14843334A0DE",\
     0x0D: "DFF3FCD608B05597CF09A23BD17D3FD2",\
     0x2F: "4AA7C7B01134466FAC82163E4BB51BF9",\
-    0x97: "cac8b87acd9ec49690abe0813920b110",\
+    0x97: "CAC8B87ACD9EC49690ABE0813920B110",\
     0xB3: "03BEB65499140483BA187A64EF90261D",\
     0xD9: "C7AC1306DEFE39EC83A1483B0EE2EC89",\
     0xEB: "418499BE9D35A3B9FC6AD0D6F041BB26"}
-                    
+
 challenge1_secret = {\
     0x00: "D2072253A4F27468",\
     0x01: "B37A16EF557BD089",\
@@ -48,7 +48,7 @@ challenge1_secret = {\
     0x0A: "C2377E8A74096C5F",\
     0x0D: "581C7F1944F96262",\
     0x2F: "F1BC562BD55BB077",\
-    0x97: "af6010a846f741f3",\
+    0x97: "AF6010A846F741F3",\
     0xB3: "DBD3AEA4DB046410",\
     0xD9: "90E1F0C00178E3FF",\
     0xEB: "0BD9027E851FA123"}
@@ -65,14 +65,14 @@ challenge2_secret = {\
     0x0A: "093EC519AF0F502D",\
     0x0D: "318053875C203E24",\
     0x2F: "1BDF2433EB29155B",\
-    0x97: "9deec01144b66f41",\
+    0x97: "9DEEC01144B66F41",\
     0xB3: "E32B8F56B2641298",\
     0xD9: "C34A6A7B205FE8F9",\
     0xEB: "F791ED0B3F49A448"}
 
 go_key1 = bytes.fromhex("C66E9ED6ECBCB121B7465D25037D6646")
-go_key2 = bytes.fromhex("da24dab43a61cbdf61fd255d0aea7957")
-go_secret = bytes.fromhex("880e2a94110926b20e53e22ae648ae9d")
+go_key2 = bytes.fromhex("DA24DAB43A61CBDF61FD255D0AEA7957")
+go_secret = bytes.fromhex("880E2A94110926B20E53E22AE648AE9D")
 
 class PysweeperApp:
     def __init__(self, master=None):
@@ -133,8 +133,8 @@ class PysweeperApp:
         self.frame12 = ttk.Frame(self.toplevel4)
         self.labelframe2 = ttk.Labelframe(self.frame12)
         self.text1 = ScrolledText(self.labelframe2)
-        _text_ = '''pysweeper, PSPgo support\nPlease select a COM port and press [Start Service].\n'''
-        self.text1.insert('0.0', _text_)  
+        _text_ = '''pysweeper, PSP Go support\nPlease select a COM port and press [Start Service].\n'''
+        self.text1.insert('0.0', _text_)
         self.text1.configure(blockcursor='false', height='10', insertunfocussed='hollow', relief='flat')
         self.text1.configure(state='disabled', width='52')
         self.text1.pack(expand='true', fill='both', side='top')
@@ -158,7 +158,6 @@ class PysweeperApp:
 
         # Main widget
         self.mainwindow = self.toplevel4
- 
 
     def run(self):
         self.mainwindow.mainloop()
@@ -166,8 +165,8 @@ class PysweeperApp:
 ser = serial.Serial()
 running = False;
 storedsl = ''
-       
-def msg(ms): 
+
+def msg(ms):
     app.text1['state'] = 'normal'
     app.text1.insert(END, ms+'\n')
     app.text1['state'] = 'disabled'
@@ -176,7 +175,7 @@ def msg(ms):
 def clearmon():
     app.text1['state'] = 'normal'
     app.text1.delete("1.0",tk.END)
-    app.text1['state'] = 'disabled' 
+    app.text1['state'] = 'disabled'
 
 def guide():
     clearmon()
@@ -224,13 +223,12 @@ def startsv():
     global storedsl
     if running == True: return
 
-        
     serialn = bytearray(4)
     op = app.rb.get()
     portsel = app.cbsel.get()
     if not portsel:
         msg("No port selected.")
-        return 
+        return
     if (op == 9):
         msg("No option selected.")
     else:
@@ -245,11 +243,11 @@ def startsv():
             hexstr = app.entry1.get().upper()
         if (len(hexstr) != 8):
             msg("S/N must be 8 characters long.")
-            return 
+            return
         try:
             serialn = bytearray.fromhex(hexstr)
         except ValueError:
-            msg("Invalid S/N. Use only hex digits (0-9, A-F). ")
+            msg("Invalid S/N. Use only hex digits (0-9, A-F).")
             return
 
         serialn[0::2], serialn[1::2] = serialn[1::2], serialn[0::2]
@@ -267,7 +265,7 @@ def startsv():
             msg("No port echo detected. Double check your assembly.")
             stopsv()
             return
-        
+
         t = threading.Thread(target=emuloop, args=(portsel, serialn))
         t.start()
 
@@ -318,7 +316,6 @@ def readpacket(key):
             msg(hello.hex().upper() + ' ' + len.hex().upper() + ' ' + opcode.hex().upper() + ' ' + csum.hex().upper())
         return (hello, len, opcode, mesg, csum)
 
-
 def writewithchecksum(header, mesg):
     ser.write(bytes.fromhex(header))
     ser.write(mesg)
@@ -337,9 +334,9 @@ def emuloop(pname, sn):
                 if packet:
                     if packet[0].hex() == "5a":
                         if packet[2].hex() == "01":
-                            ser.write(bytes.fromhex("a5050610c30676"))  # battery capacity 
+                            ser.write(bytes.fromhex("a5050610c30676"))  # battery capacity
                         elif packet[2].hex() == "0c":
-                            writewithchecksum("a50606", sn) # battery sn 
+                            writewithchecksum("a50606", sn) # battery sn
                         elif packet[2].hex() == "80":
                             screq = packet[3]
                             version = screq[0]
@@ -347,7 +344,7 @@ def emuloop(pname, sn):
                                 response1 = bytes.fromhex("ffffffffffffffff")
                                 if app.keyWarn.get():
                                     msg(
-                                    "==================================================\n" + 
+                                    "==================================================\n" +
                                     "WARN: Key " + hex(version)[-2:].upper() +
                                     " not found, is your PSP unsupported?\n" +
                                     "Answering with placeholders.\n" +
@@ -380,7 +377,7 @@ def emuloop(pname, sn):
                                 msg("Invalid request from Syscon")
                                 return
                             resp2 = AES.new(go_key2, AES.MODE_CBC, bytearray(0x10)).decrypt(payload91)
-                            writewithchecksum("a52A062001000082828282", resp2)
+                            writewithchecksum("a52a062001000082828282", resp2)
                         elif packet[2].hex() == "03":
                             ser.write(bytes.fromhex("a5040636100a"))
                         elif packet[2].hex() == "07":
@@ -399,9 +396,9 @@ def emuloop(pname, sn):
                             ser.write(bytes.fromhex("a507069d1010281454"))
                         elif packet[2].hex() == "08":
                             ser.write(bytes.fromhex("a50406e2046a"))
-             
+
                     readpacket("a5")
-        
+
     except serial.SerialException:
         if running:
             msg("Port disconnected. Retrying in 1 second.")
@@ -410,14 +407,14 @@ def emuloop(pname, sn):
             if pname in app.combobox2['values']:
                 emuloop(pname, sn)
             else:
-                msg("Port didn't come back online. ")
+                msg("Port didn't come back online.")
                 msg("Service stopped, COM port closed.")
-                ser.close() 
+                ser.close()
                 return
         else:
             msg("Service stopped, COM port closed.")
             return
-    
+
     except OSError:
         if running:
             msg("Port disconnected. Retrying in 2 seconds.")
@@ -427,9 +424,9 @@ def emuloop(pname, sn):
             if newname in app.combobox2['values']:
                 emuloop(newname, sn)
             else:
-                msg("Port didn't come back online. ")
+                msg("Port didn't come back online.")
                 msg("Service stopped, COM port closed.")
-                ser.close() 
+                ser.close()
                 return
         else:
             msg("Service stopped, COM port closed.")
@@ -441,9 +438,7 @@ def emuloop(pname, sn):
         return
 
 def checksum(packet):
-    bp = bytearray.fromhex(packet)
-    Sum = sum(bp)
-    sh = hex(Sum)
+    sh = hex(sum(bytearray.fromhex(packet)))
     temp = bytes.fromhex(sh[len(sh)-2:len(sh)])
     return (255 - int.from_bytes(temp, byteorder='little', signed=False)).to_bytes(1, byteorder="little", signed=False)
 
@@ -451,48 +446,47 @@ def checksum(packet):
 def MixChallenge1(version, challenge):
     data = [ 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
     secret1=bytes.fromhex(challenge1_secret[version])
-    data[0] =secret1[0]
-    data[4] =secret1[1]
-    data[8] =secret1[2]
-    data[0xC] =secret1[3]
-    data[1] =secret1[4]
-    data[5] =secret1[5]
-    data[9] =secret1[6]
-    data[0xD] =secret1[7]
-    data[2] = challenge[0]
-    data[6] = challenge[1]
-    data[0xA] = challenge[2]
-    data[0xE] = challenge[3]
-    data[3] = challenge[4]
-    data[7] = challenge[5]
-    data[0xB] = challenge[6]
-    data[0xF] = challenge[7]
+    data[0x00] = secret1[0x00]
+    data[0x04] = secret1[0x01]
+    data[0x08] = secret1[0x02]
+    data[0x0C] = secret1[0x03]
+    data[0x01] = secret1[0x04]
+    data[0x05] = secret1[0x05]
+    data[0x09] = secret1[0x06]
+    data[0x0D] = secret1[0x07]
+    data[0x02] = challenge[0x00]
+    data[0x06] = challenge[0x01]
+    data[0x0A] = challenge[0x02]
+    data[0x0E] = challenge[0x03]
+    data[0x03] = challenge[0x04]
+    data[0x07] = challenge[0x05]
+    data[0x0B] = challenge[0x06]
+    data[0x0F] = challenge[0x07]
     return data
-
 
 def MixChallenge2(version, challenge):
     data = [ 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
     secret2=bytes.fromhex(challenge2_secret[version])
-    data[0] =challenge[0]
-    data[4] =challenge[1]
-    data[8] =challenge[2]
-    data[0xC] =challenge[3]
-    data[1] =challenge[4]
-    data[5] =challenge[5]
-    data[9] =challenge[6]
-    data[0xD] =challenge[7]
-    data[2] = secret2[0]
-    data[6] = secret2[1]
-    data[0xA] = secret2[2]
-    data[0xE] = secret2[3]
-    data[3] = secret2[4]
-    data[7] = secret2[5]
-    data[0xB] = secret2[6]
-    data[0xF] = secret2[7]
-    return data
+    data[0x00] = challenge[0x00]
+    data[0x04] = challenge[0x01]
+    data[0x08] = challenge[0x02]
+    data[0x0C] = challenge[0x03]
+    data[0x01] = challenge[0x04]
+    data[0x05] = challenge[0x05]
+    data[0x09] = challenge[0x06]
+    data[0x0D] = challenge[0x07]
+    data[0x02] = secret2[0x00]
+    data[0x06] = secret2[0x01]
+    data[0x0A] = secret2[0x02]
+    data[0x0E] = secret2[0x03]
+    data[0x03] = secret2[0x04]
+    data[0x07] = secret2[0x05]
+    data[0x0B] = secret2[0x06]
+    data[0x0F] = secret2[0x07]
+    return(data)
 
 newmap = [
-    0x00, 0x04, 0x08, 0x0C, 0x01, 0x05, 0x09, 0x0D, 0x02, 0x06, 0x0A, 0x0E, 0x03, 0x07, 0x0B, 0x0F, 
+    0x00, 0x04, 0x08, 0x0C, 0x01, 0x05, 0x09, 0x0D, 0x02, 0x06, 0x0A, 0x0E, 0x03, 0x07, 0x0B, 0x0F,
 ]
 
 def MatrixSwap(key):
@@ -501,9 +495,6 @@ def MatrixSwap(key):
         temp[i] = key[newmap[i]]
     return temp[0:len(key)]
 
-    
 if __name__ == '__main__':
     app = PysweeperApp()
     app.run()
-
-
