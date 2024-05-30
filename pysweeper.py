@@ -325,7 +325,7 @@ def emuloop(pname, sn):
     if openport(pname) == 1: return
     challenge1b = bytearray()
     msg("Service started.")
-    msg("Using serial " + sn.hex().upper())
+    msg(f"Using serial {sn.hex().upper()}")
     try:
         while ser.is_open and running:
             time.sleep(0.001)
@@ -345,7 +345,7 @@ def emuloop(pname, sn):
                                 if app.keyWarn.get():
                                     msg(
                                     "==================================================\n" +
-                                    "WARN: Key " + hex(version)[-2:].upper() +
+                                    f"WARN: Key {hex(version)[-2:].upper()}" +
                                     " not found, is your PSP unsupported?\n" +
                                     "Answering with placeholders.\n" +
                                     "==================================================")
@@ -369,7 +369,7 @@ def emuloop(pname, sn):
                         elif packet[2].hex() == "90":
                             screq=packet[3]
                             payload=AES.new(go_key1, AES.MODE_CBC, bytearray(0x10)).decrypt(screq[0x8:0x28])
-                            msg('Decrypted result: ' + payload.hex().upper())
+                            msg(f'Decrypted result: {payload.hex().upper()}')
                             payload91 = payload[8:0x10] + payload[0:8] + bytearray(0x10)
                             if payload[0x10:0x20] == go_secret:
                                 msg("Go Handshake Request is valid")
@@ -420,7 +420,7 @@ def emuloop(pname, sn):
             msg("Port disconnected. Retrying in 2 seconds.")
             time.sleep(2)
             updatecom()
-            newname = '/dev/' + os.path.basename(os.readlink(storedsl))
+            newname = f'/dev/{os.path.basename(os.readlink(storedsl))}'
             if newname in app.combobox2['values']:
                 emuloop(newname, sn)
             else:
@@ -433,7 +433,7 @@ def emuloop(pname, sn):
             return
 
     except Exception as e:
-        msg("An exception occurred in IO loop: " + repr(e))
+        msg(f"An exception occurred in IO loop: {repr(e)}")
         ser.close()
         return
 
