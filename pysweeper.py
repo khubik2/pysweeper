@@ -250,7 +250,7 @@ def startsv():
             msg("Invalid S/N. Use only hex digits (0-9, A-F).")
             return
 
-        serialn[0::2], serialn[1::2] = serialn[1::2], serialn[0::2]
+        serialn[::2], serialn[1::2] = serialn[1::2], serialn[::2]
         running = True
         # spastic code
         if os.path.exists('/dev/serial/by-id'):
@@ -357,10 +357,10 @@ def emuloop(pname, sn):
                                 second[:] = challenge1a[:]
                                 challenge1b=MatrixSwap(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes((second))))
                                 #challenge1b = bytearray.fromhex('AAAAAAAAAAAAAAAA')
-                                response1 = bytes(challenge1a[0:8]) + bytes(challenge1b[0:8])
+                                response1 = bytes(challenge1a[:8]) + bytes(challenge1b[:8])
                             writewithchecksum("a51206", response1)
                         elif packet[2].hex() == "81":
-                            data2=MixChallenge2(version,challenge1b[0:8])
+                            data2 = MixChallenge2(version,challenge1b[:8])
                             challenge2=AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data2)))
                             response2=(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(challenge2))
                             writewithchecksum("a51206", response2)
@@ -370,7 +370,7 @@ def emuloop(pname, sn):
                             screq=packet[3]
                             payload=AES.new(go_key1, AES.MODE_CBC, bytearray(0x10)).decrypt(screq[0x8:0x28])
                             msg(f'Decrypted result: {payload.hex().upper()}')
-                            payload91 = payload[8:0x10] + payload[0:8] + bytearray(0x10)
+                            payload91 = payload[8:0x10] + payload[:8] + bytearray(0x10)
                             if payload[0x10:0x20] == go_secret:
                                 msg("Go Handshake Request is valid")
                             else:
@@ -439,7 +439,7 @@ def emuloop(pname, sn):
 
 def checksum(packet):
     sh = hex(sum(bytearray.fromhex(packet)))
-    temp = bytes.fromhex(sh[len(sh)-2:len(sh)])
+    temp = bytes.fromhex(sh[len(sh)-2:])
     return (255 - int.from_bytes(temp, byteorder='little', signed=False)).to_bytes(1, byteorder="little", signed=False)
 
 #PSP v4 Syscon Handshake Calculator by Proxima (R)
@@ -491,9 +491,9 @@ newmap = [
 
 def MatrixSwap(key):
     temp = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
-    for i in range(0,len(key)):
+    for i in range(len(key)):
         temp[i] = key[newmap[i]]
-    return temp[0:len(key)]
+    return temp[:len(key)]
 
 if __name__ == '__main__':
     app = PysweeperApp()
