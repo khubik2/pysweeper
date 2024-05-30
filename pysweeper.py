@@ -255,8 +255,8 @@ def startsv():
         # spastic code
         if os.path.exists('/dev/serial/by-id'):
             for sl in os.listdir('/dev/serial/by-id'):
-                if os.path.basename(os.readlink('/dev/serial/by-id/' + sl)) == os.path.basename(portsel):
-                    storedsl = '/dev/serial/by-id/' + sl
+                if os.path.basename(os.readlink(f'/dev/serial/by-id/{sl}')) == os.path.basename(portsel):
+                    storedsl = f'/dev/serial/by-id/{sl}'
                     # msg(storedsl)
         else: storedsl = ''
 
@@ -291,10 +291,10 @@ def openport(pname):
         ser.reset_output_buffer()
         return 0
     except serial.SerialException:
-        msg("Port " + pname + " is busy, not present or you don't have permissions to use it.")
+        msg(f"Port {pname} is busy, not present or you don't have permissions to use it.")
         return 1
     except Exception as e:
-        msg("An exception occurred during port opening: " + repr(e))
+        msg(f"An exception occurred during port opening: {repr(e)}")
         return 1
 
 def readpacket(key):
@@ -310,10 +310,10 @@ def readpacket(key):
             mesg = bytearray(msglen)
             mesg = ser.read(msglen)
             csum = ser.read(1)
-            msg(hello.hex().upper() + ' ' + len.hex().upper() + ' ' + opcode.hex().upper() + ' ' + mesg.hex().upper() + ' ' + csum.hex().upper())
+            msg(f'{hello.hex().upper()} {len.hex().upper()} {opcode.hex().upper()} {mesg.hex().upper()} {csum.hex().upper()}')
         else:
             csum = ser.read(1)
-            msg(hello.hex().upper() + ' ' + len.hex().upper() + ' ' + opcode.hex().upper() + ' ' + csum.hex().upper())
+            msg(f'{hello.hex().upper()} {len.hex().upper()} {opcode.hex().upper()} {csum.hex().upper()}')
         return (hello, len, opcode, mesg, csum)
 
 def writewithchecksum(header, mesg):
