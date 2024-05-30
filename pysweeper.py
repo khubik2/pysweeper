@@ -213,10 +213,7 @@ def test_serial_port(portsel):
     ser.write(teststr)
     cmpstr = ser.read_until()
     ser.close()
-    if teststr != cmpstr:
-        return False
-    else:
-        return True
+    return teststr == cmpstr
 
 def startsv():
     global running
@@ -277,9 +274,7 @@ def stopsv():
 def updatecom():
     app.combobox2['state'] = 'normal'
     app.combobox2['values'] = ''
-    portlist = list()
-    for port in serial.tools.list_ports.comports():
-        portlist.append(port.device)
+    portlist = [port.device for port in serial.tools.list_ports.comports()]
     app.combobox2['values'] = portlist
     app.combobox2['state'] = 'readonly'
 
