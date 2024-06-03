@@ -213,10 +213,7 @@ def test_serial_port(portsel):
     ser.write(teststr)
     cmpstr = ser.read_until()
     ser.close()
-    if teststr != cmpstr:
-        return False
-    else:
-        return True
+    return teststr == cmpstr
 
 def startsv():
     global running
@@ -250,13 +247,13 @@ def startsv():
             msg("Invalid S/N. Use only hex digits (0-9, A-F).")
             return
 
-        serialn[0::2], serialn[1::2] = serialn[1::2], serialn[0::2]
+        serialn[::2], serialn[1::2] = serialn[1::2], serialn[::2]
         running = True
         # spastic code
         if os.path.exists('/dev/serial/by-id'):
             for sl in os.listdir('/dev/serial/by-id'):
-                if os.path.basename(os.readlink('/dev/serial/by-id/' + sl)) == os.path.basename(portsel):
-                    storedsl = '/dev/serial/by-id/' + sl
+                if os.path.basename(os.readlink(f'/dev/serial/by-id/{sl}')) == os.path.basename(portsel):
+                    storedsl = f'/dev/serial/by-id/{sl}'
                     # msg(storedsl)
         else: storedsl = ''
 
@@ -277,9 +274,7 @@ def stopsv():
 def updatecom():
     app.combobox2['state'] = 'normal'
     app.combobox2['values'] = ''
-    portlist = list()
-    for port in serial.tools.list_ports.comports():
-        portlist.append(port.device)
+    portlist = [port.device for port in serial.tools.list_ports.comports()]
     app.combobox2['values'] = portlist
     app.combobox2['state'] = 'readonly'
 
@@ -291,30 +286,32 @@ def openport(pname):
         ser.reset_output_buffer()
         return 0
     except serial.SerialException:
-        msg("Port " + pname + " is busy, not present or you don't have permissions to use it.")
+        msg(f"Port {pname} is busy, not present or you don't have permissions to use it.")
         return 1
     except Exception as e:
-        msg("An exception occurred during port opening: " + repr(e))
+        msg(f"An exception occurred during port opening: {repr(e)}")
         return 1
 
 def readpacket(key):
     mesg = bytearray()
     hello = ser.read(1) # 1
-    if hello.hex() == key:
-        len = ser.read(1) # 2
-        opcode = ser.read(1) # 3
-        if len.hex() != "02":
-            msglen = (int.from_bytes(len, byteorder='little', signed=False) - 2)
-            while (ser.in_waiting < (msglen + 1)):
-                time.sleep(0.001)
-            mesg = bytearray(msglen)
-            mesg = ser.read(msglen)
-            csum = ser.read(1)
-            msg(hello.hex().upper() + ' ' + len.hex().upper() + ' ' + opcode.hex().upper() + ' ' + mesg.hex().upper() + ' ' + csum.hex().upper())
-        else:
-            csum = ser.read(1)
-            msg(hello.hex().upper() + ' ' + len.hex().upper() + ' ' + opcode.hex().upper() + ' ' + csum.hex().upper())
-        return (hello, len, opcode, mesg, csum)
+    if hello.hex() != key:
+        return
+    
+    len = ser.read(1) # 2
+    opcode = ser.read(1) # 3
+    if len.hex() != "02":
+        msglen = (int.from_bytes(len, byteorder='little', signed=False) - 2)
+        while (ser.in_waiting < (msglen + 1)):
+            time.sleep(0.001)
+        mesg = bytearray(msglen)
+        mesg = ser.read(msglen)
+        csum = ser.read(1)
+        msg(f'{hello.hex().upper()} {len.hex().upper()} {opcode.hex().upper()} {mesg.hex().upper()} {csum.hex().upper()}')
+    else:
+        csum = ser.read(1)
+        msg(f'{hello.hex().upper()} {len.hex().upper()} {opcode.hex().upper()} {csum.hex().upper()}')
+    return (hello, len, opcode, mesg, csum)
 
 def writewithchecksum(header, mesg):
     ser.write(bytes.fromhex(header))
@@ -325,121 +322,132 @@ def emuloop(pname, sn):
     if openport(pname) == 1: return
     challenge1b = bytearray()
     msg("Service started.")
-    msg("Using serial " + sn.hex().upper())
+    msg(f"Using serial {sn.hex().upper()}")
     try:
         while ser.is_open and running:
             time.sleep(0.001)
-            if ser.in_waiting >= 4: # a packet is no less than 4 bytes long
-                packet = readpacket("5a")
-                if packet:
-                    if packet[0].hex() == "5a":
-                        if packet[2].hex() == "01":
-                            ser.write(bytes.fromhex("a5050610c30676"))  # battery capacity
-                        elif packet[2].hex() == "0c":
-                            writewithchecksum("a50606", sn) # battery sn
-                        elif packet[2].hex() == "80":
-                            screq = packet[3]
-                            version = screq[0]
-                            if version not in keystore:
-                                response1 = bytes.fromhex("ffffffffffffffff")
-                                if app.keyWarn.get():
-                                    msg(
-                                    "==================================================\n" +
-                                    "WARN: Key " + hex(version)[-2:].upper() +
-                                    " not found, is your PSP unsupported?\n" +
-                                    "Answering with placeholders.\n" +
-                                    "==================================================")
-                            else:
-                                req = screq[1:]
-                                data=MixChallenge1(version,req)
-                                challenge1a=AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data)))
-                                second = bytearray(0x10)
-                                second[:] = challenge1a[:]
-                                challenge1b=MatrixSwap(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes((second))))
-                                #challenge1b = bytearray.fromhex('AAAAAAAAAAAAAAAA')
-                                response1 = bytes(challenge1a[0:8]) + bytes(challenge1b[0:8])
-                            writewithchecksum("a51206", response1)
-                        elif packet[2].hex() == "81":
-                            data2=MixChallenge2(version,challenge1b[0:8])
-                            challenge2=AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data2)))
-                            response2=(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(challenge2))
-                            writewithchecksum("a51206", response2)
-                            if version in (0xEB, 0xB3):
-                                ser.write(bytes.fromhex("5a0201a2"))
-                        elif packet[2].hex() == "90":
-                            screq=packet[3]
-                            payload=AES.new(go_key1, AES.MODE_CBC, bytearray(0x10)).decrypt(screq[0x8:0x28])
-                            msg('Decrypted result: ' + payload.hex().upper())
-                            payload91 = payload[8:0x10] + payload[0:8] + bytearray(0x10)
-                            if payload[0x10:0x20] == go_secret:
-                                msg("Go Handshake Request is valid")
-                            else:
-                                msg("Invalid request from Syscon")
-                                return
-                            resp2 = AES.new(go_key2, AES.MODE_CBC, bytearray(0x10)).decrypt(payload91)
-                            writewithchecksum("a52a062001000082828282", resp2)
-                        elif packet[2].hex() == "03":
-                            ser.write(bytes.fromhex("a5040636100a"))
-                        elif packet[2].hex() == "07":
-                            ser.write(bytes.fromhex("a50406080741"))
-                        elif packet[2].hex() == "0b":
-                            ser.write(bytes.fromhex("a504060f0041"))
-                        elif packet[2].hex() == "09":
-                            ser.write(bytes.fromhex("a5040601044b"))
-                        elif packet[2].hex() == "02":
-                            ser.write(bytes.fromhex("a503061b36"))
-                        elif packet[2].hex() == "04":
-                            ser.write(bytes.fromhex("a504066810d8"))
-                        elif packet[2].hex() == "16":
-                            ser.write(bytes.fromhex("a51306536f6e79456e65726779446576696365736b"))
-                        elif packet[2].hex() == "0d":
-                            ser.write(bytes.fromhex("a507069d1010281454"))
-                        elif packet[2].hex() == "08":
-                            ser.write(bytes.fromhex("a50406e2046a"))
+            if ser.in_waiting < 4: # a packet is no less than 4 bytes long
+                continue
 
-                    readpacket("a5")
+            packet = readpacket("5a")
+            if not packet:
+                continue
+
+            if packet[0].hex() != "5a":
+                continue
+
+            if packet[2].hex() == "01":
+                ser.write(bytes.fromhex("a5050610c30676"))  # battery capacity
+            elif packet[2].hex() == "0c":
+                writewithchecksum("a50606", sn) # battery sn
+            elif packet[2].hex() == "80":
+                screq = packet[3]
+                version = screq[0]
+                if version in keystore:
+                    req = screq[1:]
+                    data=MixChallenge1(version,req)
+                    challenge1a=AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data)))
+                    second = bytearray(0x10)
+                    second[:] = challenge1a[:]
+                    challenge1b=MatrixSwap(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes((second))))
+                    #challenge1b = bytearray.fromhex('AAAAAAAAAAAAAAAA')
+                    response1 = bytes(challenge1a[:8]) + bytes(challenge1b[:8])
+                else:
+                    response1 = bytes.fromhex("ffffffffffffffff")
+                    if app.keyWarn.get():
+                        msg(
+                        "==================================================\n" +
+                        f"WARN: Key {hex(version)[-2:].upper()}" +
+                        " not found, is your PSP unsupported?\n" +
+                        "Answering with placeholders.\n" +
+                        "==================================================")
+                    
+                writewithchecksum("a51206", response1)
+            elif packet[2].hex() == "81":
+                data2 = MixChallenge2(version,challenge1b[:8])
+                challenge2=AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(bytes(MatrixSwap(data2)))
+                response2=(AES.new(bytes.fromhex(keystore[version]), AES.MODE_ECB).encrypt(challenge2))
+                writewithchecksum("a51206", response2)
+                if version in (0xEB, 0xB3):
+                    ser.write(bytes.fromhex("5a0201a2"))
+            elif packet[2].hex() == "90":
+                screq=packet[3]
+                payload=AES.new(go_key1, AES.MODE_CBC, bytearray(0x10)).decrypt(screq[0x8:0x28])
+                msg(f'Decrypted result: {payload.hex().upper()}')
+                payload91 = payload[8:0x10] + payload[:8] + bytearray(0x10)
+                if payload[0x10:0x20] != go_secret:
+                    msg("Invalid request from Syscon")
+                    return
+                msg("Go Handshake Request is valid")
+                    
+                resp2 = AES.new(go_key2, AES.MODE_CBC, bytearray(0x10)).decrypt(payload91)
+                writewithchecksum("a52a062001000082828282", resp2)
+            elif packet[2].hex() == "03":
+                ser.write(bytes.fromhex("a5040636100a"))
+            elif packet[2].hex() == "07":
+                ser.write(bytes.fromhex("a50406080741"))
+            elif packet[2].hex() == "0b":
+                ser.write(bytes.fromhex("a504060f0041"))
+            elif packet[2].hex() == "09":
+                ser.write(bytes.fromhex("a5040601044b"))
+            elif packet[2].hex() == "02":
+                ser.write(bytes.fromhex("a503061b36"))
+            elif packet[2].hex() == "04":
+                ser.write(bytes.fromhex("a504066810d8"))
+            elif packet[2].hex() == "16":
+                ser.write(bytes.fromhex("a51306536f6e79456e65726779446576696365736b"))
+            elif packet[2].hex() == "0d":
+                ser.write(bytes.fromhex("a507069d1010281454"))
+            elif packet[2].hex() == "08":
+                ser.write(bytes.fromhex("a50406e2046a"))
+
+            readpacket("a5")
 
     except serial.SerialException:
-        if running:
-            msg("Port disconnected. Retrying in 1 second.")
-            time.sleep(1)
-            updatecom()
-            if pname in app.combobox2['values']:
-                emuloop(pname, sn)
-            else:
-                msg("Port didn't come back online.")
-                msg("Service stopped, COM port closed.")
-                ser.close()
-                return
-        else:
+        if not running:
             msg("Service stopped, COM port closed.")
             return
+        
+        msg("Port disconnected. Retrying in 1 second.")
+        time.sleep(1)
+        updatecom()
+        if pname not in app.combobox2['values']:
+            msg("Port didn't come back online.")
+            msg("Service stopped, COM port closed.")
+            ser.close()
+            return
+        
+        emuloop(pname, sn)
+            
+            
 
     except OSError:
-        if running:
-            msg("Port disconnected. Retrying in 2 seconds.")
-            time.sleep(2)
-            updatecom()
-            newname = '/dev/' + os.path.basename(os.readlink(storedsl))
-            if newname in app.combobox2['values']:
-                emuloop(newname, sn)
-            else:
-                msg("Port didn't come back online.")
-                msg("Service stopped, COM port closed.")
-                ser.close()
-                return
-        else:
+        if not running:
             msg("Service stopped, COM port closed.")
             return
+        
+        msg("Port disconnected. Retrying in 2 seconds.")
+        time.sleep(2)
+        updatecom()
+        newname = f'/dev/{os.path.basename(os.readlink(storedsl))}'
+        if newname not in app.combobox2['values']:
+            msg("Port didn't come back online.")
+            msg("Service stopped, COM port closed.")
+            ser.close()
+            return
+            
+        emuloop(newname, sn)
+            
+            
 
     except Exception as e:
-        msg("An exception occurred in IO loop: " + repr(e))
+        msg(f"An exception occurred in IO loop: {repr(e)}")
         ser.close()
         return
 
 def checksum(packet):
     sh = hex(sum(bytearray.fromhex(packet)))
-    temp = bytes.fromhex(sh[len(sh)-2:len(sh)])
+    temp = bytes.fromhex(sh[len(sh)-2:])
     return (255 - int.from_bytes(temp, byteorder='little', signed=False)).to_bytes(1, byteorder="little", signed=False)
 
 #PSP v4 Syscon Handshake Calculator by Proxima (R)
@@ -491,9 +499,9 @@ newmap = [
 
 def MatrixSwap(key):
     temp = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
-    for i in range(0,len(key)):
+    for i in range(len(key)):
         temp[i] = key[newmap[i]]
-    return temp[0:len(key)]
+    return temp[:len(key)]
 
 if __name__ == '__main__':
     app = PysweeperApp()
