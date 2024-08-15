@@ -24,7 +24,7 @@ Connect the hardware assembly to your PSP, insert the recovery medium, start Bar
 ![Yoti's schematic, modified](https://github.com/user-attachments/assets/0d80cb8f-d2e0-42c8-9ee2-c789f4692f82)
 
 To restore your PSPgo, follow the wiring diagram to create the hardware assembly from a PSPgo data cable.
-It does involve soldering to bare connector pins that haven't been broken out (and potentially desoldering the connector from the breakout board and relocating the pins, if your cable doesn't have them in neccessary places), which is no easy job to do.  
+It does involve soldering to bare connector pins that haven't been broken out (and potentially desoldering the connector from the breakout board and relocating the pins, if your cable doesn't have them in neccessary places)
 ![PSPgo schematic](https://github.com/user-attachments/assets/3e7a5df9-0837-4502-9997-49df0f25354f)
 
 ## Compatibility
