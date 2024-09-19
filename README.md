@@ -5,7 +5,7 @@ You can watch the video or follow a text instruction below.
 [![Video Thumbnail](http://img.youtube.com/vi/ZiyRU0H7CU8/0.jpg)](http://www.youtube.com/watch?v=ZiyRU0H7CU8 "PSP-3000 Unbrick Guide")
 
 To restore your monoblock PSP (1000-2000-3000), follow a simple instruction: 
-1. Get neccessary hardware to make a probe: 
+1. Get necessary hardware to make a probe: 
     - a USB to TTL converter;
     - a 1n4148 diode; 
     - a 10kOhm resistor (not required); 
@@ -24,7 +24,7 @@ Connect the hardware assembly to your PSP, insert the recovery medium, start Bar
 ![Yoti's schematic, modified](https://github.com/user-attachments/assets/0d80cb8f-d2e0-42c8-9ee2-c789f4692f82)
 
 To restore your PSPgo, follow the wiring diagram to create the hardware assembly from a PSPgo data cable.
-It does involve soldering to bare connector pins that haven't been broken out (and potentially desoldering the connector from the breakout board and relocating the pins, if your cable doesn't have them in neccessary places)
+It does involve soldering to bare connector pins that haven't been broken out (and potentially desoldering the connector from the breakout board and relocating the pins, if your cable doesn't have them in necessary places)
 ![PSPgo schematic](https://github.com/user-attachments/assets/3e7a5df9-0837-4502-9997-49df0f25354f)
 
 ## Compatibility
